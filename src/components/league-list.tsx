@@ -1,7 +1,13 @@
 import { List, ActionPanel, Action, Keyboard } from "@raycast/api";
 
 const leagues = [
-  { id: "PL", name: "Premier League", country: "England", icon: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+  {
+    id: "PL",
+    name: "Premier League",
+    country: "England",
+    icon: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    shortcut: { modifiers: ["cmd"], key: "e" } as Keyboard.Shortcut,
+  },
   {
     id: "LL",
     name: "La Liga",
@@ -16,9 +22,27 @@ const leagues = [
     icon: "🇩🇪",
     shortcut: { modifiers: ["cmd"], key: "g" } as Keyboard.Shortcut,
   },
-  { id: "SA", name: "Serie A", country: "Italy", icon: "🇮🇹" },
-  { id: "L1", name: "Ligue 1", country: "France", icon: "🇫🇷" },
-  { id: "ED", name: "Eredivisie", country: "Netherlands", icon: "🇳🇱" },
+  {
+    id: "SA",
+    name: "Serie A",
+    country: "Italy",
+    icon: "🇮🇹",
+    shortcut: { modifiers: ["cmd"], key: "i" } as Keyboard.Shortcut,
+  },
+  {
+    id: "L1",
+    name: "Ligue 1",
+    country: "France",
+    icon: "🇫🇷",
+    shortcut: { modifiers: ["cmd"], key: "f" } as Keyboard.Shortcut,
+  },
+  {
+    id: "ED",
+    name: "Eredivisie",
+    country: "Netherlands",
+    icon: "🇳🇱",
+    shortcut: { modifiers: ["cmd"], key: "n" } as Keyboard.Shortcut,
+  },
 ];
 
 type LeagueListProps = {
