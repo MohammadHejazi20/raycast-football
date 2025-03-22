@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Detail } from "@raycast/api";
 import { LeagueList } from "./components/league-list";
+import TeamList from "./components/team-list";
 
 export default function Command() {
-  const [selectedLeague, setSelectedLeague] = useState<{ id: string; name: string } | null>(null);
+  const [selectedLeague, setSelectedLeague] = useState<{ id: number; name: string } | null>(null);
 
   return selectedLeague ? (
-    <Detail markdown={`# 🏆 ${selectedLeague.name}\nFetching matches...`} />
+    <TeamList leagueId={selectedLeague.id} />
   ) : (
     <LeagueList
       onSelect={(league) => {
