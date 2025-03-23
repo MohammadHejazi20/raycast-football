@@ -1,77 +1,132 @@
-import { List, ActionPanel, Action, Keyboard } from "@raycast/api";
+import { Action, ActionPanel, List } from "@raycast/api";
+import { useEffect, useState } from "react";
+import { FOOTBALL_API_KEY } from "../../secrets";
 
-// TODO: use https://api.football-data.org/v4/competitions to get leagues
+type Filters = {
+  client: string;
+};
 
-const leagues = [
-  {
-    id: 2021,
-    name: "Premier League",
-    country: "England",
-    icon: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
-    shortcut: { modifiers: ["cmd"], key: "e" } as Keyboard.Shortcut,
-  },
-  {
-    id: 2014,
-    name: "La Liga",
-    country: "Spain",
-    icon: "🇪🇸",
-    shortcut: { modifiers: ["cmd"], key: "s" } as Keyboard.Shortcut,
-  },
-  {
-    id: 2002,
-    name: "Bundesliga",
-    country: "Germany",
-    icon: "🇩🇪",
-    shortcut: { modifiers: ["cmd"], key: "g" } as Keyboard.Shortcut,
-  },
-  {
-    id: 2019,
-    name: "Serie A",
-    country: "Italy",
-    icon: "🇮🇹",
-    shortcut: { modifiers: ["cmd"], key: "i" } as Keyboard.Shortcut,
-  },
-  {
-    id: 2015,
-    name: "Ligue 1",
-    country: "France",
-    icon: "🇫🇷",
-    shortcut: { modifiers: ["cmd"], key: "f" } as Keyboard.Shortcut,
-  },
-  {
-    id: 2003,
-    name: "Eredivisie",
-    country: "Netherlands",
-    icon: "🇳🇱",
-    shortcut: { modifiers: ["cmd"], key: "n" } as Keyboard.Shortcut,
-  },
-];
+type Area = {
+  id: number;
+  name: string;
+  code: string;
+  flag: string | null;
+};
+
+type Season = {
+  id: number;
+  startDate: string;
+  endDate: string;
+  currentMatchday: number;
+  winner: WinnerTeam | null;
+};
+
+type WinnerTeam = {
+  id: number;
+  name: string;
+  shortName: string;
+  tla: string;
+  crest: string;
+  address?: string;
+  website?: string;
+  founded?: number;
+  clubColors?: string;
+  venue?: string;
+  lastUpdated?: string;
+};
+
+type Competition = {
+  id: number;
+  area: Area;
+  name: string;
+  code: string;
+  type: "LEAGUE" | "CUP";
+  emblem: string;
+  plan: string;
+  currentSeason: Season;
+  numberOfAvailableSeasons: number;
+  lastUpdated: string;
+};
+
+type CompetitionResponse = {
+  count: number;
+  filters: Filters;
+  competitions: Competition[];
+};
 
 type LeagueListProps = {
   onSelect: (league: { id: number; name: string; country: string }) => void;
 };
 
 export function LeagueList({ onSelect }: LeagueListProps) {
+  const [leagues, setLeagues] = useState<Competition[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    async function fetchLeagues() {
+      try {
+        const res = await fetch("https://api.football-data.org/v4/competitions", {
+          headers: { "X-Auth-Token": FOOTBALL_API_KEY },
+        });
+
+        if (!res.ok) throw new Error(`Failed to fetch leagues: ${res.statusText}`);
+        const data = (await res.json()) as CompetitionResponse;
+
+        setLeagues(data.competitions);
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchLeagues();
+  }, []);
+
+  if (isLoading) {
+    return <List isLoading />;
+  }
+
+  if (error) {
+    return <List.EmptyView title="Error fetching leagues" description={error.message} />;
+  }
+
+  if (!leagues.length) {
+    return <List.EmptyView title="No leagues found" description="Please try again later." />;
+  }
+
   return (
     <List searchBarPlaceholder="Search leagues...">
       {leagues.map((league) => (
         <List.Item
           key={league.id}
-          icon={league.icon}
+          icon={league.emblem}
           title={league.name}
-          subtitle={league.country}
-          accessories={[
-            { text: "View Matches" },
-            league.shortcut ? { text: `⌘ + ${league.shortcut.key.toUpperCase()}` } : {},
-          ]}
+          subtitle={league.area.name}
+          accessories={[{ text: "View Matches" }, league.plan ? { text: `Plan: ${league.plan}` } : {}]}
           actions={
             <ActionPanel>
-              <Action title="Select League" onAction={() => onSelect(league)} />
-              {league.shortcut && (
+              <Action
+                title="Select League"
+                onAction={() =>
+                  onSelect({
+                    id: league.id,
+                    name: league.name,
+                    country: league.area.name,
+                  })
+                }
+              />
+              {league.plan && (
                 <Action
                   title={`Quick Select ${league.name}`}
-                  onAction={() => onSelect(league)}
-                  shortcut={league.shortcut}
+                  onAction={() =>
+                    onSelect({
+                      id: league.id,
+                      name: league.name,
+                      country: league.area.name,
+                    })
+                  }
                 />
               )}
             </ActionPanel>
